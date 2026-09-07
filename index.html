@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URCAFin — Simulador e Diagnóstico de Endividamento Pessoal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            urca: {
+              blue: '#0f2b48',
+              navy: '#0b1d30',
+              green: '#0d8258',
+              lightGreen: '#e6f4ea',
+              gold: '#d97706',
+              amber: '#f59e0b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- HEADER INSTITUCIONAL -->
+  <header class="bg-urca-blue text-white shadow-md border-b-4 border-urca-green">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md font-bold text-xl tracking-tight border border-emerald-300/40">
+          U
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
+              URCA<span class="text-emerald-400">Fin</span>
+            </h1>
+            <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              Laboratório Didático
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 font-medium">
+            Universidade Regional do Cariri · Curso de Ciências Econômicas · Finanças Pessoais & Macroeconomia
+          </p>
+        </div>
+      </div>
+
+      <!-- Ações do Topo -->
+      <div class="flex items-center gap-2.5">
+        <button id="btn-abrir-glossario" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          <i data-lucide="book-open" class="w-3.5 h-3.5 text-amber-400"></i>
+          Glossário Teórico
+        </button>
+        <button id="btn-gerar-laudo" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
+          <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+          Emitir Laudo Acadêmico
+        </button>
+      </div>
+    </div>
+
+    <!-- TICKER MACROECONÔMICO -->
+    <div id="macro-ticker" class="bg-urca-navy/90 border-t border-slate-800/80 px-4 py-2 text-xs overflow-x-auto">
+      <div class="max-w-7xl mx-auto flex items-center justify-between min-w-[760px] gap-6 text-slate-300 font-mono-num">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-slate-400 uppercase text-[11px] font-sans font-semibold">Cenário Macro:</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Selic Básica:</span>
+          <span class="font-bold text-amber-400">14,50% a.a.</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Rotativo Cartão:</span>
+          <span class="font-bold text-rose-400">440,5% a.a. (14,9% a.m.)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Cheque Especial:</span>
+          <span class="font-bold text-amber-400">130,0% a.a. (7,2% a.m.)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Consignado Médio:</span>
+          <span class="font-bold text-emerald-400">24,8% a.a. (1,87% a.m.)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Endividamento (Peic):</span>
+          <span class="font-bold text-sky-400">80,9% das famílias</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVEGAÇÃO PRINCIPAL EM ABAS (SPA SEM ROLAGEM EXCESSIVA) -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex space-x-1 sm:space-x-4 overflow-x-auto py-1">
+        <button data-tab="tab-modulo-a" class="tab-btn active flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold rounded-t-md text-slate-700 hover:text-urca-blue whitespace-nowrap">
+          <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+          <span>Módulo A: Painel Macroeconômico & Bola de Neve</span>
+        </button>
+        <button data-tab="tab-modulo-b" class="tab-btn flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold rounded-t-md text-slate-700 hover:text-urca-blue whitespace-nowrap">
+          <i data-lucide="clipboard-check" class="w-4 h-4 text-urca-blue"></i>
+          <span>Módulo B: Diagnóstico Teórico (10 Questões)</span>
+        </button>
+        <button data-tab="tab-modulo-c" class="tab-btn flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold rounded-t-md text-slate-700 hover:text-urca-blue whitespace-nowrap">
+          <i data-lucide="scale" class="w-4 h-4 text-amber-600"></i>
+          <span>Módulo C: Mínimo Existencial (Lei 14.181)</span>
+        </button>
+        <button data-tab="tab-modulo-d" class="tab-btn flex items-center gap-2 px-4 py-3 text-xs sm:text-sm font-semibold rounded-t-md text-slate-700 hover:text-urca-blue whitespace-nowrap">
+          <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i>
+          <span>Módulo D: Mitos vs. Realidades & Desenrola</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTEÚDO DOS MÓDULOS -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ================================================================= -->
+    <!-- MÓDULO A: PAINEL MACROECONÔMICO E O EFEITO BOLA DE NEVE -->
+    <!-- ================================================================= -->
+    <section id="tab-modulo-a" class="tab-content block space-y-6">
+      <!-- Banner Didático -->
+      <div class="bg-gradient-to-r from-slate-900 to-urca-blue rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold tracking-wide uppercase mb-1">
+            Laboratório Interativo · Juros Compostos
+          </div>
+          <h2 class="text-xl font-bold">Simulação de Choques de Juros e Crescimento Geométrico da Dívida</h2>
+          <p class="text-xs text-slate-300 max-w-3xl mt-1">
+            Observe como a alta da taxa Selic se propaga assimetricamente para os juros ao consumidor. Compare o crescimento exponencial do <strong>Rotativo (440,5% a.a.)</strong> contra o <strong>Cheque Especial (130% a.a.)</strong> e o <strong>Crédito Consignado (24,8% a.a.)</strong>.
+          </p>
+        </div>
+        <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700 flex items-center gap-3">
+          <i data-lucide="flame" class="w-7 h-7 text-rose-400"></i>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Regra de Ouro (72)</div>
+            <div class="text-sm font-bold text-white">Rotativo dobra em ~4,9 meses</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Controles de Simulação (4 Colunas) -->
+        <div class="lg:col-span-4 space-y-5">
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-emerald-600"></i>
+              Parâmetros de Simulação
+            </h3>
+
+            <!-- Valor Inicial -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="sim-valor-inicial">Dívida Inicial (R$):</label>
+                <span id="label-sim-valor-inicial" class="font-mono-num font-bold text-emerald-700 text-sm">R$ 3.000,00</span>
+              </div>
+              <input type="range" id="sim-valor-inicial" min="500" max="30000" step="500" value="3000" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>R$ 500</span>
+                <span>R$ 15.000</span>
+                <span>R$ 30.000</span>
+              </div>
+            </div>
+
+            <!-- Prazo em Meses -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="sim-meses">Prazo da Simulação (Meses):</label>
+                <span id="label-sim-meses" class="font-mono-num font-bold text-emerald-700 text-sm">12 meses</span>
+              </div>
+              <input type="range" id="sim-meses" min="3" max="36" step="1" value="12" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>3 meses</span>
+                <span>12 meses</span>
+                <span>36 meses</span>
+              </div>
+            </div>
+
+            <!-- Pagamento Mensal Voluntário -->
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="sim-pagamento">Amortização Mensal (R$):</label>
+                <span id="label-sim-pagamento" class="font-mono-num font-bold text-slate-600 text-sm">R$ 0,00 (Rolagem pura)</span>
+              </div>
+              <input type="range" id="sim-pagamento" min="0" max="1500" step="50" value="0" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <p class="text-[11px] text-slate-500 mt-1">
+                Se R$ 0, simula a dívida rolando sem nenhum pagamento, sofrendo o impacto pleno dos juros compostos.
+              </p>
+            </div>
+
+            <!-- Cenário Customizado -->
+            <div class="pt-2 border-t border-slate-100">
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="sim-taxa-custom">Taxa Cenário Personalizado (% a.m.):</label>
+                <span id="label-sim-taxa-custom" class="font-mono-num font-bold text-indigo-600 text-sm">5,00% a.m.</span>
+              </div>
+              <input type="range" id="sim-taxa-custom" min="0.5" max="25" step="0.5" value="5.0" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>0.5% (Habitacional)</span>
+                <span>5.0% (Pessoal)</span>
+                <span>25% (Agiotagem)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cards das Taxas de Referência -->
+          <div class="space-y-2.5">
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-start gap-3">
+              <div class="w-3 h-3 rounded-full bg-rose-500 mt-1"></div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-rose-900">Cartão Rotativo</span>
+                  <span class="text-[10px] font-mono-num bg-rose-200 text-rose-800 px-1.5 py-0.5 rounded font-bold">14,92% a.m. (440,5% a.a.)</span>
+                </div>
+                <p class="text-[11px] text-rose-700 mt-0.5">Juro punitivo de curtíssimo prazo que vira bola de neve em semanas.</p>
+              </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
+              <div class="w-3 h-3 rounded-full bg-amber-500 mt-1"></div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-amber-900">Cheque Especial</span>
+                  <span class="text-[10px] font-mono-num bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-bold">7,18% a.m. (130,0% a.a.)</span>
+                </div>
+                <p class="text-[11px] text-amber-700 mt-0.5">Limite pré-aprovado de débito em conta corrente sujeito a juros diários.</p>
+              </div>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-start gap-3">
+              <div class="w-3 h-3 rounded-full bg-emerald-500 mt-1"></div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-emerald-900">Crédito Consignado</span>
+                  <span class="text-[10px] font-mono-num bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold">1,87% a.m. (24,8% a.a.)</span>
+                </div>
+                <p class="text-[11px] text-emerald-700 mt-0.5">Desconto direto em folha / benefício. Linha prudencial com menor risco.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visualização Gráfica e Resultados (8 Colunas) -->
+        <div class="lg:col-span-8 space-y-5">
+          <!-- Gráfico de Trajetória da Dívida -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                  <i data-lucide="line-chart" class="w-4 h-4 text-emerald-600"></i>
+                  Evolução Temporal do Saldo Devedor (Efeito Bola de Neve)
+                </h3>
+                <p class="text-xs text-slate-500">Projeção mês a mês sob juros compostos no prazo selecionado</p>
+              </div>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Rotativo</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Chq. Especial</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Consignado</span>
+              </div>
+            </div>
+
+            <div class="h-72 w-full relative">
+              <canvas id="chart-bola-neve"></canvas>
+            </div>
+          </div>
+
+          <!-- Comparativo Rápido dos Resultados em KPIs -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-rose-50/70 border border-rose-200 rounded-xl p-4 text-rose-950">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-rose-700">Saldo Final: Rotativo</div>
+              <div id="kpi-saldo-rotativo" class="text-xl font-extrabold font-mono-num text-rose-600 mt-1">R$ 16.215,00</div>
+              <div class="text-xs text-rose-800 mt-1 flex justify-between">
+                <span>Multiplicador:</span>
+                <span id="kpi-mult-rotativo" class="font-bold">5.4x o valor inicial</span>
+              </div>
+              <div class="text-[11px] text-rose-600 mt-1">Dobra a cada <strong>4,9 meses</strong></div>
+            </div>
+
+            <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-amber-950">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">Saldo Final: Chq. Especial</div>
+              <div id="kpi-saldo-cheque" class="text-xl font-extrabold font-mono-num text-amber-600 mt-1">R$ 6.900,00</div>
+              <div class="text-xs text-amber-800 mt-1 flex justify-between">
+                <span>Multiplicador:</span>
+                <span id="kpi-mult-cheque" class="font-bold">2.3x o valor inicial</span>
+              </div>
+              <div class="text-[11px] text-amber-600 mt-1">Dobra a cada <strong>10,0 meses</strong></div>
+            </div>
+
+            <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 text-emerald-950">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Saldo Final: Consignado</div>
+              <div id="kpi-saldo-consignado" class="text-xl font-extrabold font-mono-num text-emerald-600 mt-1">R$ 3.744,00</div>
+              <div class="text-xs text-emerald-800 mt-1 flex justify-between">
+                <span>Multiplicador:</span>
+                <span id="kpi-mult-consignado" class="font-bold">1.25x o valor inicial</span>
+              </div>
+              <div class="text-[11px] text-emerald-600 mt-1">Dobra a cada <strong>37,4 meses</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALCULADORA DE IMPACTO NO CONSUMO (MODELO ECONOMÉTRICO) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6 mt-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase mb-1">
+              Microfundamentos · Modelo de Crowding-Out do Consumo
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="shopping-bag" class="w-5 h-5 text-indigo-600"></i>
+              Calculadora Econométrica de Impacto no Consumo das Famílias
+            </h3>
+            <p class="text-xs text-slate-500">
+              Quantifica como o comprometimento de renda com juros restringe o consumo essencial e destrói investimentos em capital humano (educação e saúde).
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Inputs do Consumidor Simulado -->
+          <div class="lg:col-span-4 space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Renda Líquida Mensal Familiar (R$):</label>
+              <input type="number" id="eco-renda" value="3500" min="1000" step="100" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 font-mono-num">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Serviço da Dívida / Parcela Paga por Mês (R$):</label>
+              <input type="number" id="eco-parcela" value="1200" min="0" step="50" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 font-mono-num">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Saldo Devedor Consolidado Total (R$):</label>
+              <input type="number" id="eco-divida" value="14000" min="0" step="500" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 font-mono-num">
+            </div>
+            <button id="btn-recalcular-econometrico" class="w-full py-2 bg-urca-blue hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              Atualizar Modelo Econométrico
+            </button>
+          </div>
+
+          <!-- Métricas e Decomposição -->
+          <div class="lg:col-span-8 space-y-4">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="p-3 bg-slate-100 rounded-xl">
+                <div class="text-[10px] text-slate-500 font-bold uppercase">Comprometimento (DSR)</div>
+                <div id="eco-res-dsr" class="text-base font-bold font-mono-num text-slate-800">34,3%</div>
+                <div class="text-[10px] text-amber-600 font-medium">Teto prudencial: 30%</div>
+              </div>
+
+              <div class="p-3 bg-slate-100 rounded-xl">
+                <div class="text-[10px] text-slate-500 font-bold uppercase">Razão Dívida/Renda (DTI)</div>
+                <div id="eco-res-dti" class="text-base font-bold font-mono-num text-slate-800">0,33 anos</div>
+                <div class="text-[10px] text-slate-500">4,0 meses de salário</div>
+              </div>
+
+              <div class="p-3 bg-rose-50 rounded-xl border border-rose-100">
+                <div class="text-[10px] text-rose-700 font-bold uppercase">Consumo Perdido / Mês</div>
+                <div id="eco-res-consumo-mes" class="text-base font-bold font-mono-num text-rose-600">R$ 984,00</div>
+                <div class="text-[10px] text-rose-700">PMC estimada = 0,82</div>
+              </div>
+
+              <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                <div class="text-[10px] text-indigo-700 font-bold uppercase">Elasticidade Consumo-Dívida</div>
+                <div id="eco-res-elasticidade" class="text-base font-bold font-mono-num text-indigo-700">-0,52</div>
+                <div class="text-[10px] text-indigo-600">Sensibilidade elevada</div>
+              </div>
+            </div>
+
+            <!-- Gráfico de Decomposição do Sacrifício de Consumo -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+              <div class="sm:col-span-5 h-44 relative">
+                <canvas id="chart-consumo-decomposicao"></canvas>
+              </div>
+              <div class="sm:col-span-7 space-y-2">
+                <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900">
+                  <div class="font-bold flex items-center gap-1.5 mb-1">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                    <span id="eco-res-status-titulo">Alerta de Asfixia Orçamentária</span>
+                  </div>
+                  <p id="eco-res-status-desc" class="text-[11px] text-amber-800 leading-relaxed">
+                    Efeito Crowding-out ativo: gastos essenciais começam a ser substituídos pelo pagamento de juros. A elasticidade-consumo torna o orçamento hiper-sensível a choques de inflação.
+                  </p>
+                </div>
+                <div class="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <strong>Conclusão Epistemológica para a URCA:</strong> O endividamento atua como um imposto regressivo sobre a renda disponível, contraindo a demanda agregada keynesiana e sacrificando principalmente a acumulação de capital humano nas famílias de baixa e média renda.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- MÓDULO B: QUESTIONÁRIO DE DIAGNÓSTICO TEÓRICO (10 QUESTÕES) -->
+    <!-- ================================================================= -->
+    <section id="tab-modulo-b" class="tab-content hidden space-y-6">
+      <div class="bg-gradient-to-r from-urca-blue to-slate-900 rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold tracking-wide uppercase mb-1">
+            Módulo Didático B · Fundamentação Teórica
+          </div>
+          <h2 class="text-xl font-bold">Diagnóstico Epistemológico do Endividamento Pessoal</h2>
+          <p class="text-xs text-slate-300 max-w-3xl mt-1">
+            Cada pergunta deste diagnóstico conecta um hábito financeiro real a uma corrente teórica clássica ou contemporânea: <strong>Ciclo de Vida (Modigliani)</strong>, <strong>Racionalidade Limitada (Simon)</strong>, <strong>Economia Comportamental (Thaler/Kahneman)</strong> e <strong>Fragilidade Financeira (Minsky)</strong>.
+          </p>
+        </div>
+        <div class="bg-slate-800/80 rounded-xl px-4 py-3 border border-slate-700 text-center">
+          <div class="text-[11px] text-slate-400 uppercase font-semibold">Progresso</div>
+          <div id="diagnostic-progress-text" class="text-base font-bold text-emerald-400 font-mono-num">0 / 10 respondidas</div>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso do Questionário -->
+      <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+        <div id="diagnostic-progress-bar" class="bg-emerald-600 h-full transition-all duration-300 w-0"></div>
+      </div>
+
+      <!-- Container Dinâmico das 10 Perguntas -->
+      <div id="quiz-container" class="space-y-4">
+        <!-- Injetado dinamicamente via JS com formatação acadêmica -->
+      </div>
+
+      <!-- Botão de Processamento -->
+      <div class="flex justify-center pt-2">
+        <button id="btn-processar-diagnostico" class="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center gap-2">
+          <i data-lucide="award" class="w-5 h-5"></i>
+          Processar Diagnóstico & Gerar Análise Teórica Completa
+        </button>
+      </div>
+
+      <!-- PAINEL DE RESULTADO DO DIAGNÓSTICO (INICIALMENTE OCULTO) -->
+      <div id="painel-resultado-diagnostico" class="hidden bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-200 pb-6">
+          <div class="space-y-2 text-center md:text-left">
+            <span class="text-xs uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+              Laudo Diagnóstico Gerado
+            </span>
+            <h3 id="diag-status-titulo" class="text-2xl font-black text-slate-900 mt-2">
+              Solvência Estrutural e Equilíbrio Orçamentário
+            </h3>
+            <p id="diag-status-resumo" class="text-sm text-slate-600 max-w-2xl">
+              Comportamento com forte consistência temporal intertemporal, alinhado à Teoria do Ciclo de Vida sem déficit primário.
+            </p>
+          </div>
+
+          <!-- Gauge SVG -->
+          <div class="flex flex-col items-center">
+            <div class="relative w-48 h-28">
+              <svg viewBox="0 0 200 110" class="w-full h-full">
+                <!-- Arco de Fundo -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+                <!-- Faixas Coloridas (Verde, Âmbar, Laranja, Vermelho) -->
+                <path d="M 20 100 A 80 80 0 0 1 60 40" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round"/>
+                <path d="M 60 40 A 80 80 0 0 1 100 20" fill="none" stroke="#F59E0B" stroke-width="18"/>
+                <path d="M 100 20 A 80 80 0 0 1 140 40" fill="none" stroke="#F97316" stroke-width="18"/>
+                <path d="M 140 40 A 80 80 0 0 1 180 100" fill="none" stroke="#EF4444" stroke-width="18" stroke-linecap="round"/>
+                <!-- Ponteiro -->
+                <circle cx="100" cy="100" r="7" fill="#1E293B"/>
+                <line id="gauge-needle" class="gauge-needle" x1="100" y1="100" x2="100" y2="32" stroke="#1E293B" stroke-width="4" stroke-linecap="round" style="transform: rotate(-90deg);"/>
+              </svg>
+              <div id="diag-score-display" class="absolute bottom-0 left-0 right-0 text-center font-mono-num font-black text-2xl text-slate-900">
+                0 / 100
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide mt-1">Índice de Vulnerabilidade</span>
+          </div>
+        </div>
+
+        <!-- Parecer Epistemológico Geral -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mb-2">
+            <i data-lucide="graduation-cap" class="w-4 h-4 text-urca-blue"></i>
+            Fundamentação Epistemológica & Diretriz Metodológica
+          </h4>
+          <p id="diag-parecer-epistemologico" class="text-xs text-slate-700 leading-relaxed mb-3">
+            --
+          </p>
+          <div class="p-3 bg-white rounded-lg border border-slate-200 text-xs">
+            <strong class="text-emerald-700">Recomendação Pedagógica:</strong>
+            <span id="diag-diretriz-didatica" class="text-slate-600">--</span>
+          </div>
+        </div>
+
+        <!-- Alertas de Vulnerabilidades Críticas (Se houver) -->
+        <div id="diag-alertas-criticos-container" class="hidden space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-rose-700 flex items-center gap-1.5">
+            <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600"></i>
+            Vulnerabilidades Críticas Detectadas
+          </h4>
+          <div id="diag-alertas-criticos-lista" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </div>
+
+        <!-- Matriz Teórica Detalhada (Card a Card por Questão) -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="book-marked" class="w-4 h-4 text-indigo-600"></i>
+            Matriz Teórica Detalhada por Questão
+          </h4>
+          <div id="diag-matriz-teorica" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- MÓDULO C: CALCULADORA DO MÍNIMO EXISTENCIAL (LEI 14.181/2021) -->
+    <!-- ================================================================= -->
+    <section id="tab-modulo-c" class="tab-content hidden space-y-6">
+      <div class="bg-gradient-to-r from-amber-950 via-slate-900 to-urca-blue rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold tracking-wide uppercase mb-1">
+            Direito Econômico do Consumidor · Lei 14.181/2021
+          </div>
+          <h2 class="text-xl font-bold">Simulador de Recuperação Judicial da Pessoa Física & Mínimo Existencial</h2>
+          <p class="text-xs text-slate-300 max-w-3xl mt-1">
+            A Lei do Superendividamento assegura que nenhuma negociação de dívida pode violar a subsistência básica do cidadão. Calcule o Mínimo Existencial, avalie o plano de pagamento em 5 anos (60 meses) e verifique se há insolvência civil com necessidade de <em>haircut</em> compulsório.
+          </p>
+        </div>
+        <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700 flex items-center gap-3">
+          <i data-lucide="shield-check" class="w-7 h-7 text-amber-400"></i>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Piso Legal (Dec. 11.567)</div>
+            <div class="text-sm font-bold text-white font-mono-num">R$ 600,00 / pessoa</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Inputs do Orçamento Familiar (5 Colunas) -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i data-lucide="wallet" class="w-4 h-4 text-emerald-600"></i>
+              1. Renda e Dívidas da Família
+            </h3>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Renda Familiar Líquida Mensal (R$):</label>
+              <input type="number" id="c-renda-liquida" value="2800" min="0" step="50" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 font-mono-num">
+              <p class="text-[10px] text-slate-400 mt-0.5">Soma dos salários líquidos de todos os provedores da residência.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Passivo Consolidado a Repactuar (R$):</label>
+              <input type="number" id="c-divida-total" value="18000" min="0" step="500" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 font-mono-num">
+              <p class="text-[10px] text-slate-400 mt-0.5">Total da dívida sem juros punitivos futuros (conforme Art. 104-A).</p>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="c-prazo-meses">Prazo do Plano de Pagamento:</label>
+                <span id="label-c-prazo" class="font-mono-num font-bold text-urca-blue">60 meses (5 anos)</span>
+              </div>
+              <input type="range" id="c-prazo-meses" min="12" max="60" step="6" value="60" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>12 meses</span>
+                <span>36 meses</span>
+                <span>60 meses (Teto Legal)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Despesas de Subsistência Discriminadas -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i data-lucide="home" class="w-4 h-4 text-amber-600"></i>
+              2. Despesas Essenciais de Subsistência
+            </h3>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-0.5">Alimentação Básica:</label>
+                <input type="number" id="c-gasto-alimentacao" value="950" min="0" step="50" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 font-mono-num">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-0.5">Água, Energia, Gás:</label>
+                <input type="number" id="c-gasto-agua-luz" value="380" min="0" step="20" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 font-mono-num">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-0.5">Moradia (Aluguel/Cond.):</label>
+                <input type="number" id="c-gasto-moradia" value="600" min="0" step="50" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 font-mono-num">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-0.5">Saúde / Medicamentos:</label>
+                <input type="number" id="c-gasto-saude" value="220" min="0" step="20" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 font-mono-num">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-0.5">Transporte para Trabalho:</label>
+                <input type="number" id="c-gasto-transporte" value="180" min="0" step="20" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 font-mono-num">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-0.5">Outros Essenciais:</label>
+                <input type="number" id="c-gasto-outros" value="70" min="0" step="10" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 font-mono-num">
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
+              <span class="font-bold text-slate-700">Total Subsistência Comprovada:</span>
+              <span id="c-total-subsistencia" class="font-mono-num font-extrabold text-amber-700">R$ 2.400,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resultados e Análise do Plano Quinquenal (7 Colunas) -->
+        <div class="lg:col-span-7 space-y-4">
+          <!-- Card de Alerta de Solvência -->
+          <div id="c-alerta-solvencia" class="rounded-2xl p-5 shadow-sm text-white bg-amber-500 transition-all">
+            <div class="flex items-start gap-3">
+              <i id="c-alerta-icone" data-lucide="alert-triangle" class="w-6 h-6 shrink-0 mt-0.5"></i>
+              <div class="space-y-1">
+                <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-black/20 text-white">
+                  Diagnóstico da Repactuação Quinquenal
+                </span>
+                <h4 id="c-alerta-status" class="text-lg font-black">Alerta de Solvência em Avaliação</h4>
+                <p id="c-alerta-descricao" class="text-xs leading-relaxed opacity-95">--</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Métricas Comparativas de Solvência -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <div class="text-[10px] text-slate-500 font-bold uppercase">Mínimo Existencial</div>
+              <div id="c-res-minimo" class="text-sm font-extrabold font-mono-num text-amber-600">R$ 2.400,00</div>
+              <div class="text-[10px] text-slate-400">Intocável por lei</div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <div class="text-[10px] text-slate-500 font-bold uppercase">Margem Livre Real</div>
+              <div id="c-res-margem-livre" class="text-sm font-extrabold font-mono-num text-emerald-600">R$ 400,00</div>
+              <div class="text-[10px] text-slate-400">Renda - Subsistência</div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <div class="text-[10px] text-slate-500 font-bold uppercase">Teto Prudencial (30%)</div>
+              <div id="c-res-teto30" class="text-sm font-extrabold font-mono-num text-urca-blue">R$ 840,00</div>
+              <div class="text-[10px] text-slate-400">Limite da consignação</div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200">
+              <div class="text-[10px] text-slate-500 font-bold uppercase">Parcela Necessária</div>
+              <div id="c-res-parcela" class="text-sm font-extrabold font-mono-num text-rose-600">R$ 300,00</div>
+              <div class="text-[10px] text-slate-400">Dívida / 60 meses</div>
+            </div>
+          </div>
+
+          <!-- Gráfico de Partição da Renda Familiar -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-600"></i>
+                Composição do Orçamento Pós-Repactuação
+              </h4>
+              <span class="text-[11px] text-slate-400">Visão Proporcional da Renda</span>
+            </div>
+            <div class="h-56 relative">
+              <canvas id="chart-minimo-existencial"></canvas>
+            </div>
+          </div>
+
+          <!-- Parecer Jurídico-Econômico Acadêmico -->
+          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="scale" class="w-4 h-4 text-urca-blue"></i>
+              Recomendação Processual (Lei 14.181/2021 · Art. 104-A e 104-B)
+            </div>
+            <p id="c-recomendacao-judicial" class="text-slate-600 leading-relaxed">
+              --
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- MÓDULO D: PAINEL DE MITOS VS. REALIDADES & DESENROLA BRASIL -->
+    <!-- ================================================================= -->
+    <section id="tab-modulo-d" class="tab-content hidden space-y-6">
+      <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-urca-blue rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold tracking-wide uppercase mb-1">
+            Módulo Didático D · Análise Empírica de Dados Macro
+          </div>
+          <h2 class="text-xl font-bold">Mitos vs. Realidades: A Causalidade Primária do Endividamento</h2>
+          <p class="text-xs text-slate-300 max-w-3xl mt-1">
+            Ensina aos estudantes de Ciências Econômicas da URCA a priorizarem evidências estatísticas em vez de narrativas de senso comum. Compare o impacto agregado dos juros pagos pelas famílias com as apostas online (bets) e simule as regras do <strong>Desenrola Brasil (2026)</strong>.
+          </p>
+        </div>
+        <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700 flex items-center gap-3">
+          <i data-lucide="bar-chart-2" class="w-7 h-7 text-indigo-400"></i>
+          <div>
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Desproporção Empírica</div>
+            <div class="text-sm font-bold text-white">Juros = 18,8x Bets</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL 1: JUROS VS BETS (ANÁLISE DE DADOS MACRO) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+              <i data-lucide="columns" class="w-5 h-5 text-rose-600"></i>
+              Restrição Orçamentária das Famílias Brasileiras: Juros vs. Apostas Online
+            </h3>
+            <p class="text-xs text-slate-500">Dados agregados anuais em R$ bilhões comparando as pressões de despesa</p>
+          </div>
+          <span class="text-xs font-mono-num font-bold px-2.5 py-1 rounded bg-rose-50 text-rose-700 border border-rose-200">
+            R$ 696,8 Bi vs R$ 37,0 Bi
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-7 h-64 relative">
+            <canvas id="chart-macro-juros-bets"></canvas>
+          </div>
+
+          <div class="lg:col-span-5 space-y-3">
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-3.5">
+              <div class="text-xs font-bold text-rose-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600"></i>
+                Juros do Sistema Bancário: Causa Estrutural Primária
+              </div>
+              <p class="text-xs text-rose-800 leading-relaxed">
+                As famílias brasileiras transferem <strong>R$ 696,8 bilhões por ano</strong> em juros e encargos financeiros sob spreads elevados e Selic a 14,5%. Isso consome mais de 11% da renda total das famílias.
+              </p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5">
+              <div class="text-xs font-bold text-blue-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
+                Apostas Online (Bets): Impacto Residual nos Agregados
+              </div>
+              <p class="text-xs text-blue-800 leading-relaxed">
+                O dispêndio líquido em apostas totaliza <strong>R$ 37,0 bilhões</strong>, representando <strong>apenas 0,46% do consumo das famílias</strong>. Embora gere problemas microcomportamentais sérios, não é a causa macro primordial do endividamento recorde de 80,9%.
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600">
+              <strong>Lição Didática URCA:</strong> Na análise macroeconômica rigorosa, o economista deve hierarquizar a magnitude das variáveis para formular políticas públicas efetivas.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL 2: SIMULADOR DO PROGRAMA DESENROLA BRASIL (2026) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase mb-1">
+              Políticas Públicas de Crédito · Versão 2026
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="handshake" class="w-5 h-5 text-emerald-600"></i>
+              Simulador Interativo do Programa Desenrola Brasil
+            </h3>
+            <p class="text-xs text-slate-500">
+              Descontos de até 90%, teto de juros de 1,99% ao mês, uso do FGTS e a regra de bloqueio preventivo de CPF para apostas por 12 meses.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Controles do Desenrola (4 Colunas) -->
+          <div class="lg:col-span-4 space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Dívida Original Negativada (R$):</label>
+              <input type="number" id="des-divida-original" value="6000" min="500" step="500" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono-num">
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="des-desconto-pct">Desconto no Principal:</label>
+                <span id="label-des-desconto" class="font-mono-num font-bold text-emerald-700">80% de desconto</span>
+              </div>
+              <input type="range" id="des-desconto-pct" min="50" max="90" step="5" value="80" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>50%</span>
+                <span>80% (Média)</span>
+                <span>90% (Teto)</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-700 mb-1">
+                <label for="des-prazo-meses">Prazo de Financiamento:</label>
+                <span id="label-des-prazo" class="font-mono-num font-bold text-urca-blue">36 meses</span>
+              </div>
+              <input type="range" id="des-prazo-meses" min="12" max="60" step="6" value="36" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>12 meses</span>
+                <span>36 meses</span>
+                <span>60 meses</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Abatimento com Saldo do FGTS (R$):</label>
+              <input type="number" id="des-fgts" value="300" min="0" step="50" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono-num">
+              <p class="text-[10px] text-slate-400 mt-0.5">Permitido uso de contas inativas do FGTS.</p>
+            </div>
+          </div>
+
+          <!-- Resultados Comparativos (8 Colunas) -->
+          <div class="lg:col-span-8 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
+                <div class="text-[10px] font-bold text-emerald-800 uppercase">Novo Valor da Dívida</div>
+                <div id="des-res-valor-com-desconto" class="text-xl font-black font-mono-num text-emerald-700 mt-0.5">R$ 1.200,00</div>
+                <div class="text-[11px] text-emerald-600 mt-0.5">Após desconto de <span id="des-res-desc-kpi">80%</span></div>
+              </div>
+
+              <div class="bg-urca-lightGreen border border-emerald-300 rounded-xl p-3.5">
+                <div class="text-[10px] font-bold text-urca-blue uppercase">Parcela Mensal Desenrola</div>
+                <div id="des-res-parcela" class="text-xl font-black font-mono-num text-urca-green mt-0.5">R$ 35,40 / mês</div>
+                <div class="text-[11px] text-slate-600 mt-0.5">Taxa de apenas <strong>1,99% a.m.</strong></div>
+              </div>
+
+              <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3.5">
+                <div class="text-[10px] font-bold text-indigo-900 uppercase">Economia Gerada</div>
+                <div id="des-res-economia" class="text-xl font-black font-mono-num text-indigo-700 mt-0.5">R$ 31.100,00</div>
+                <div class="text-[11px] text-indigo-600 mt-0.5">Comparado a 1 ano no rotativo</div>
+              </div>
+            </div>
+
+            <!-- Comparativo Direto de Cenários -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Comparativo: Rolar no Rotativo vs. Acordo Desenrola Brasil
+              </h4>
+
+              <div class="space-y-2 text-xs">
+                <div>
+                  <div class="flex justify-between text-slate-600 mb-1">
+                    <span>1 Ano Rolando no Rotativo (14,9% a.m.):</span>
+                    <span id="des-comp-rotativo" class="font-mono-num font-bold text-rose-600">R$ 32.430,00</span>
+                  </div>
+                  <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-rose-500 h-full w-full"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-600 mb-1">
+                    <span>Total Pago no Desenrola (Com Juros de 1,99% a.m.):</span>
+                    <span id="des-comp-desenrola" class="font-mono-num font-bold text-emerald-700">R$ 1.574,00</span>
+                  </div>
+                  <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                    <div id="des-bar-desenrola" class="bg-emerald-500 h-full w-[8%]"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Regra dos 12 Meses de Bets -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+              <div class="text-xs text-amber-900">
+                <strong>Cláusula Protetiva de CPF Anti-Apostas (Desenrola 2026):</strong> Ao homologar o desconto de até 90% e o parcelamento social, o CPF do beneficiário é automaticamente suspenso de operar em casas de apostas online por <strong>12 meses</strong>. Essa medida visa blindar a recomposição do patrimônio familiar e evitar a reincidência imediata na inadimplência.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: GLOSSÁRIO TEÓRICO ACADÊMICO -->
+  <div id="modal-glossario" class="fixed inset-0 bg-slate-900/60 z-50 hidden backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-urca-blue text-white flex justify-between items-center border-b border-slate-700">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5 text-amber-400"></i>
+          Glossário de Conceitos Econômicos e Financeiros
+        </h3>
+        <button id="btn-fechar-glossario" class="text-slate-300 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 text-xs text-slate-700">
+        <div class="border-b border-slate-100 pb-3">
+          <strong class="text-urca-blue text-sm">Teoria do Ciclo de Vida (Franco Modigliani):</strong>
+          <p class="mt-1 text-slate-600 leading-relaxed">
+            Postula que os indivíduos planejam seu consumo e poupança ao longo de toda a vida para suavizar o consumo (*consumption smoothing*). No início da vida e na velhice consome-se mais do que se ganha (despoupança/crédito), compensando nos anos produtivos. A distorção ocorre quando o crédito é confundido com renda permanente.
+          </p>
+        </div>
+        <div class="border-b border-slate-100 pb-3">
+          <strong class="text-urca-blue text-sm">Racionalidade Limitada (Herbert Simon):</strong>
+          <p class="mt-1 text-slate-600 leading-relaxed">
+            Agentes econômicos possuem limites cognitivos, tempo escasso e acesso imperfeito a informações. Em vez de otimizarem fórmulas complexas de juros compostos ou CET, recorrem a heurísticas simplificadoras ("se a parcela cabe no mês, eu compro"), caindo em armadilhas de juros de 440% a.a.
+          </p>
+        </div>
+        <div class="border-b border-slate-100 pb-3">
+          <strong class="text-urca-blue text-sm">Economia Comportamental & Viés do Presente (Laibson, Thaler, Kahneman):</strong>
+          <p class="mt-1 text-slate-600 leading-relaxed">
+            Humanos tendem a aplicar taxas de desconto hiperbólico, supervalorizando o prazer imediato do consumo em detrimento da dor futura do endividamento. O "Sistema 1" (emocional e rápido) domina o "Sistema 2" (racional e analítico) em momentos de estresse.
+          </p>
+        </div>
+        <div class="border-b border-slate-100 pb-3">
+          <strong class="text-urca-blue text-sm">Hipótese da Instabilidade Financeira (Hyman Minsky):</strong>
+          <p class="mt-1 text-slate-600 leading-relaxed">
+            Classifica as posições de solvência em Hedge (fluxo cobre juros e principal), Especulativa (fluxo cobre apenas juros e requer rolagem do principal) e Ponzi (fluxo não cobre sequer os juros, exigindo endividamento contínuo até o colapso).
+          </p>
+        </div>
+        <div>
+          <strong class="text-urca-blue text-sm">Mínimo Existencial (Lei 14.181/2021):</strong>
+          <p class="mt-1 text-slate-600 leading-relaxed">
+            Conceito jurídico-constitucional derivado do princípio da dignidade da pessoa humana. Garante que os credores não podem apropriar-se da parcela de renda necessária para alimentação, saúde, habitação e água/energia do devedor e seus dependentes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL / CONTAINER DE EMISSÃO DO LAUDO ACADÊMICO -->
+  <div id="modal-laudo" class="fixed inset-0 bg-slate-900/60 z-50 hidden backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-urca-blue text-white flex justify-between items-center border-b border-slate-700">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i data-lucide="file-check" class="w-5 h-5 text-emerald-400"></i>
+          Dossiê Acadêmico de Diagnóstico Financeiro
+        </h3>
+        <button id="btn-fechar-laudo" class="text-slate-300 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-5 text-xs text-slate-800" id="conteudo-laudo-render">
+        <!-- Identificação do Aluno -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-0.5">Nome do(a) Aluno(a):</label>
+            <input type="text" id="laudo-aluno-nome" placeholder="Digite seu nome completo" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-0.5">Matrícula / Curso:</label>
+            <input type="text" id="laudo-aluno-matricula" placeholder="Ex: 2026.1 - Ciências Econômicas" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-0.5">Disciplina / Turma:</label>
+            <input type="text" id="laudo-aluno-turma" value="Introdução às Finanças · Prof. URCA" class="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300">
+          </div>
+        </div>
+
+        <!-- Resumo Consolidado -->
+        <div class="space-y-3">
+          <h4 class="font-bold text-sm text-urca-blue uppercase tracking-wider border-b pb-1">
+            Síntese do Diagnóstico e Simulações
+          </h4>
+          <div id="laudo-resumo-corpo" class="space-y-3">
+            <!-- Preenchido via app.js -->
+          </div>
+        </div>
+
+        <!-- Assinatura Acadêmica -->
+        <div class="pt-8 border-t border-slate-200 grid grid-cols-2 gap-8 text-center text-[11px] text-slate-500">
+          <div>
+            <div class="border-b border-slate-400 w-3/4 mx-auto mb-1"></div>
+            <span>Assinatura do(a) Estudante</span>
+          </div>
+          <div>
+            <div class="border-b border-slate-400 w-3/4 mx-auto mb-1"></div>
+            <span>Visto do Professor(a) Orientador(a) / URCA</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-3.5 bg-slate-100 border-t border-slate-200 flex justify-end gap-3">
+        <button id="btn-imprimir-laudo" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          Imprimir / Salvar em PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700">URCAFin</span> · Universidade Regional do Cariri (URCA) · Curso de Ciências Econômicas
+      </div>
+      <div>
+        Laboratório Didático Interativo · Processamento 100% Client-Side Local-First
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS DA APLICAÇÃO -->
+  <script src="js/data.js"></script>
+  <script src="js/macroSimulator.js"></script>
+  <script src="js/diagnosticEngine.js"></script>
+  <script src="js/minimumExistential.js"></script>
+  <script src="js/mythsAndData.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

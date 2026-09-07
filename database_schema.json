@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "URCAFin - Esquema de Banco de Dados Fictício Didático",
+  "description": "Estrutura relacional e documental para armazenamento de dados de simulações e diagnósticos de endividamento da URCA",
+  "entities": {
+    "Estudante": {
+      "tabela": "estudantes",
+      "descricao": "Dados cadastrais do estudante de Ciências Econômicas da URCA",
+      "campos": {
+        "id": { "tipo": "INTEGER", "pk": true, "autoIncrement": true },
+        "nome": { "tipo": "VARCHAR(150)", "obrigatorio": true },
+        "matricula": { "tipo": "VARCHAR(20)", "unique": true, "obrigatorio": true },
+        "semestre": { "tipo": "INTEGER", "exemplo": 1 },
+        "curso": { "tipo": "VARCHAR(100)", "default": "Ciências Econômicas" },
+        "data_criacao": { "tipo": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "CenarioMacro": {
+      "tabela": "cenarios_macro",
+      "descricao": "Parâmetros macroeconômicos de referência adotados no laboratório didático",
+      "campos": {
+        "id": { "tipo": "INTEGER", "pk": true },
+        "data_referencia": { "tipo": "DATE" },
+        "taxa_selic_anual": { "tipo": "DECIMAL(5,2)", "exemplo": 14.50 },
+        "rotativo_cartao_anual": { "tipo": "DECIMAL(6,2)", "exemplo": 440.50 },
+        "cheque_especial_anual": { "tipo": "DECIMAL(6,2)", "exemplo": 130.00 },
+        "consignado_anual": { "tipo": "DECIMAL(5,2)", "exemplo": 24.80 },
+        "familias_endividadas_peic": { "tipo": "DECIMAL(4,1)", "exemplo": 80.9 },
+        "juros_familias_bilhoes": { "tipo": "DECIMAL(6,1)", "exemplo": 696.8 },
+        "gastos_apostas_bilhoes": { "tipo": "DECIMAL(6,1)", "exemplo": 37.0 }
+      }
+    },
+    "DiagnosticoEndividamento": {
+      "tabela": "diagnosticos_endividamento",
+      "descricao": "Resultado da resolução do questionário de 10 perguntas fundamentadas",
+      "campos": {
+        "id": { "tipo": "INTEGER", "pk": true, "autoIncrement": true },
+        "estudante_id": { "tipo": "INTEGER", "fk": "estudantes(id)" },
+        "pontuacao_bruta": { "tipo": "INTEGER", "min": 0, "max": 40 },
+        "indice_vulnerabilidade": { "tipo": "INTEGER", "min": 0, "max": 100 },
+        "classificacao_risco": { "tipo": "VARCHAR(50)", "exemplo": "Superendividamento Crítico" },
+        "respostas_json": { "tipo": "JSON", "descricao": "Vetor de respostas [q1_idx, q2_idx, ...]" },
+        "data_realizacao": { "tipo": "TIMESTAMP", "default": "CURRENT_TIMESTAMP" }
+      }
+    },
+    "SimulacaoBolaDeNeve": {
+      "tabela": "simulacoes_bola_neve",
+      "descricao": "Registro dos cálculos de juros compostos e tempo de duplicação",
+      "campos": {
+        "id": { "tipo": "INTEGER", "pk": true, "autoIncrement": true },
+        "estudante_id": { "tipo": "INTEGER", "fk": "estudantes(id)" },
+        "valor_inicial": { "tipo": "DECIMAL(12,2)" },
+        "prazo_meses": { "tipo": "INTEGER" },
+        "amortizacao_mensal": { "tipo": "DECIMAL(12,2)" },
+        "saldo_final_rotativo": { "tipo": "DECIMAL(12,2)" },
+        "saldo_final_cheque": { "tipo": "DECIMAL(12,2)" },
+        "saldo_final_consignado": { "tipo": "DECIMAL(12,2)" },
+        "tempo_dobro_meses_rotativo": { "tipo": "DECIMAL(4,1)" }
+      }
+    },
+    "SimulacaoMinimoExistencial": {
+      "tabela": "simulacoes_minimo_existencial",
+      "descricao": "Simulação de plano de repactuação judicial conforme Lei 14.181/2021",
+      "campos": {
+        "id": { "tipo": "INTEGER", "pk": true, "autoIncrement": true },
+        "estudante_id": { "tipo": "INTEGER", "fk": "estudantes(id)" },
+        "renda_liquida": { "tipo": "DECIMAL(12,2)" },
+        "divida_total": { "tipo": "DECIMAL(12,2)" },
+        "prazo_plano_meses": { "tipo": "INTEGER", "default": 60 },
+        "despesas_essenciais_total": { "tipo": "DECIMAL(12,2)" },
+        "margem_livre_real": { "tipo": "DECIMAL(12,2)" },
+        "parcela_necessaria": { "tipo": "DECIMAL(12,2)" },
+        "status_solvencia": { "tipo": "VARCHAR(100)", "exemplo": "Insolvência Civil / Haircut Necessário" },
+        "haircut_sugerido_percentual": { "tipo": "DECIMAL(5,2)" }
+      }
+    }
+  }
+}
