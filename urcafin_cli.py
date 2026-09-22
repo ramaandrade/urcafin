@@ -11,6 +11,11 @@ import math
 import json
 from datetime import datetime
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 # =============================================================================
 # 1. PARÂMETROS MACROECONÔMICOS E BANCO DE DADOS TEÓRICO
 # =============================================================================
@@ -357,6 +362,36 @@ def executar_comparativo_macro_cli():
     print("e não de desvios comportamentais residuais como as apostas.")
     print("-" * 75)
 
+def executar_caderno_memorias_cli():
+    print("\n📐 CADERNO DE MEMÓRIAS DE CÁLCULO & FÓRMULAS ECONÔMICAS (URCA)")
+    print("=" * 75)
+    print("1. JUROS COMPOSTOS (Efeito Bola de Neve):")
+    print("   Fórmula: M = PV * (1 + i)^n")
+    print("   Tempo de Dobra: T_dobro = ln(2) / ln(1 + i)")
+    print("   Rotativo (14,92% a.m.): R$ 3.000 em 12m vira R$ 15.917,27 (dobra em 5 meses)")
+    print("   Consignado (1,87% a.m.): R$ 3.000 em 12m vira R$ 3.746,94 (dobra em 37,4 meses)")
+    print("-" * 75)
+    print("2. COMPROMETIMENTO DA RENDA (DSR - Debt Service Ratio):")
+    print("   Fórmula: DSR = (Serviço Mensal da Dívida / Renda Líquida Mensal) * 100")
+    print("   Teto prudencial recomendado: 30%. Acima de 30% = Posição Especulativa (Minsky)")
+    print("-" * 75)
+    print("3. RAZÃO DÍVIDA/RENDA (DTI - Debt-to-Income):")
+    print("   Fórmula: DTI_anos = Dívida Total / (Renda Mensal * 12)")
+    print("   DTI_meses = Dívida Total / Renda Mensal")
+    print("-" * 75)
+    print("4. EFEITO CROWDING-OUT (Consumo Sacrificado):")
+    print("   Fórmula: ΔC = Serviço da Dívida * PMC  [com PMC = 0,82]")
+    print("   Decomposição: 28% Alimentação | 42% Capital Humano | 30% Duráveis/Lazer")
+    print("-" * 75)
+    print("5. ELASTICIDADE CONSUMO-DÍVIDA:")
+    print("   Fórmula: ε_{C, DTI} = -(0,25 + 0,008 * DSR)")
+    print("-" * 75)
+    print("6. MÍNIMO EXISTENCIAL (Lei 14.181/2021):")
+    print("   Fórmula: Mínimo = max(R$ 600,00, Σ Despesas Essenciais Comprovadas)")
+    print("   Margem Livre = max(0, Renda - Mínimo Existencial)")
+    print("   Parcela 60x = Dívida / 60 (com congelamento de encargos moratórios)")
+    print("=" * 75)
+
 def main():
     imprimir_banner()
     while True:
@@ -365,9 +400,10 @@ def main():
         print(" [2] Simular Efeito Bola de Neve (Rotativo vs Cheque vs Consignado)")
         print(" [3] Calcular Mínimo Existencial & Repactuação Judicial (Lei 14.181)")
         print(" [4] Visualizar Análise Macro: Juros das Famílias vs Bets")
-        print(" [5] Sair")
+        print(" [5] Exibir Caderno de Memórias de Cálculo & Fórmulas (URCA)")
+        print(" [6] Sair")
         
-        opcao = input("\n👉 Escolha uma opção (1-5): ").strip()
+        opcao = input("\n👉 Escolha uma opção (1-6): ").strip()
         if opcao == "1":
             executar_questionario_cli()
         elif opcao == "2":
@@ -377,10 +413,12 @@ def main():
         elif opcao == "4":
             executar_comparativo_macro_cli()
         elif opcao == "5":
+            executar_caderno_memorias_cli()
+        elif opcao == "6":
             print("\nObrigado por utilizar o URCAFin! Bons estudos na URCA.")
             break
         else:
-            print("⚠️ Opção inválida. Digite de 1 a 5.")
+            print("⚠️ Opção inválida. Digite de 1 a 6.")
 
 if __name__ == "__main__":
     main()
