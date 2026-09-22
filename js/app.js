@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabContents = document.querySelectorAll('.tab-content');
 
   function alternarAba(targetId) {
+    if (typeof fecharPopoverCalculo === 'function') {
+      fecharPopoverCalculo();
+    }
     tabButtons.forEach(btn => {
       if (btn.getAttribute('data-tab') === targetId) {
         btn.classList.add('active');
@@ -199,6 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
       chartBolaNeve.data.datasets[3].label = `Cenário Custom (${taxaCustom.toFixed(1)}% a.m.)`;
       chartBolaNeve.update();
     }
+    if (typeof atualizarPopoverSeAberto === 'function') {
+      atualizarPopoverSeAberto();
+    }
   }
 
   [elSimValor, elSimMeses, elSimPagamento, elSimTaxaCustom].forEach(input => {
@@ -263,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
         res.decomposicao.duraveisLazer
       ];
       chartConsumoDecomposicao.update();
+    }
+    if (typeof atualizarPopoverSeAberto === 'function') {
+      atualizarPopoverSeAberto();
     }
   }
 
@@ -543,6 +552,9 @@ document.addEventListener('DOMContentLoaded', () => {
       chartMinimoExistencial.data.datasets[2].data = [margemResidualFinal];
       chartMinimoExistencial.update();
     }
+    if (typeof atualizarPopoverSeAberto === 'function') {
+      atualizarPopoverSeAberto();
+    }
   }
 
   [elCRenda, elCDivida, elCPrazo, elCAlimentacao, elCAguaLuz, elCMoradia, elCSaude, elCTransporte, elCOutros].forEach(inp => {
@@ -627,6 +639,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const pctBar = Math.min(100, Math.max(5, (res.totalPagoDesenrola / (res.dividaRotativo1Ano || 1)) * 100));
     document.getElementById('des-bar-desenrola').style.width = `${pctBar}%`;
+    if (typeof atualizarPopoverSeAberto === 'function') {
+      atualizarPopoverSeAberto();
+    }
   }
 
   [elDesDivida, elDesDesconto, elDesPrazo, elDesFgts].forEach(inp => {
@@ -1010,10 +1025,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let currentActiveBtn = null;
+
+  /**
+   * Posiciona o popover flutuante imediatamente adjacente ao botão acionador,
+   * utilizando coordenadas da viewport (sem adicionar scroll offsets que causavam deslocamento)
+   */
+  function posicionarPopover(targetBtn) {
+    if (!targetBtn || calcPopover.classList.contains('hidden')) return;
+
+    const rect = targetBtn.getBoundingClientRect();
+    const margin = 12;
+    const popoverWidth = Math.min(390, window.innerWidth - (margin * 2));
+
+    calcPopover.style.width = `${popoverWidth}px`;
+
+    // Altura real renderizada pelo navegador
+    const popoverHeight = calcPopover.offsetHeight || 300;
+
+    // Alinhamento horizontal: centraliza em relação ao centro do botão
+    let left = rect.left + (rect.width / 2) - (popoverWidth / 2);
+
+    // Ajusta limites para não vazar as bordas da tela
+    if (left < margin) {
+      left = margin;
+    } else if (left + popoverWidth > window.innerWidth - margin) {
+      left = window.innerWidth - popoverWidth - margin;
+    }
+
+    // Avaliação do espaço vertical relativo ao viewport (sem window.scrollY!)
+    const spaceBelow = window.innerHeight - rect.bottom - margin;
+    const spaceAbove = rect.top - margin;
+
+    let top;
+    // Se couber abaixo com folga de 8px
+    if (spaceBelow >= popoverHeight + 8) {
+      top = rect.bottom + 8;
+    } else if (spaceAbove >= popoverHeight + 8) {
+      // Se não couber abaixo mas couber acima com folga de 8px
+      top = rect.top - popoverHeight - 8;
+    } else {
+      // Caso a tela seja verticalmente apertada (ex: mobile horizontal),
+      // coloca no lado que tiver mais espaço livre
+      if (spaceBelow >= spaceAbove) {
+        top = rect.bottom + 8;
+      } else {
+        top = Math.max(margin, rect.top - popoverHeight - 8);
+      }
+    }
+
+    // Trava de segurança: nunca renderiza fora da área visível da viewport
+    top = Math.max(margin, Math.min(top, window.innerHeight - popoverHeight - margin));
+
+    calcPopover.style.left = `${Math.round(left)}px`;
+    calcPopover.style.top = `${Math.round(top)}px`;
+  }
+
   /**
    * Exibe o Popover flutuante posicionado perto do botão acionador
    */
   function exibirPopoverCalculo(calcId, targetBtn) {
+    // Se o mesmo botão for clicado enquanto já estiver aberto, fecha (toggle)
+    if (currentActiveBtn === targetBtn && !calcPopover.classList.contains('hidden')) {
+      fecharPopoverCalculo();
+      return;
+    }
+
+    if (currentActiveBtn) {
+      currentActiveBtn.classList.remove('active');
+    }
+
+    currentActiveBtn = targetBtn;
+    if (currentActiveBtn) {
+      currentActiveBtn.classList.add('active');
+    }
+
     const memoria = obterMemoriaCalculo(calcId);
 
     popoverTitle.textContent = memoria.titulo;
@@ -1023,34 +1109,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     calcPopover.classList.remove('hidden');
 
-    // Posicionamento inteligente
-    const rect = targetBtn.getBoundingClientRect();
-    const popoverWidth = Math.min(380, window.innerWidth - 32);
-    const popoverHeight = calcPopover.offsetHeight || 320;
+    posicionarPopover(targetBtn);
 
-    let left = rect.left + window.scrollX - (popoverWidth / 2) + (rect.width / 2);
-    let top = rect.bottom + window.scrollY + 8;
-
-    // Ajusta limites horizontais da tela
-    if (left < 16) left = 16;
-    if (left + popoverWidth > window.innerWidth - 16) {
-      left = window.innerWidth - popoverWidth - 16;
+    if (window.lucide) {
+      window.lucide.createIcons();
     }
-
-    // Se estiver muito próximo ao rodapé, posiciona acima do botão
-    if (rect.bottom + popoverHeight > window.innerHeight - 20 && rect.top > popoverHeight + 20) {
-      top = rect.top + window.scrollY - popoverHeight - 8;
-    }
-
-    calcPopover.style.left = `${left}px`;
-    calcPopover.style.top = `${top}px`;
-    calcPopover.style.width = `${popoverWidth}px`;
-
-    lucide.createIcons();
   }
 
   function fecharPopoverCalculo() {
     calcPopover.classList.add('hidden');
+    if (currentActiveBtn) {
+      currentActiveBtn.classList.remove('active');
+      currentActiveBtn = null;
+    }
+  }
+
+  function atualizarPopoverSeAberto() {
+    if (currentActiveBtn && !calcPopover.classList.contains('hidden')) {
+      const calcId = currentActiveBtn.getAttribute('data-calc-id');
+      if (calcId) {
+        const memoria = obterMemoriaCalculo(calcId);
+        popoverTitle.textContent = memoria.titulo;
+        popoverFormula.textContent = memoria.formula;
+        popoverSubstitution.textContent = memoria.substituicao;
+        popoverInterpretation.textContent = memoria.interpretacao;
+        posicionarPopover(currentActiveBtn);
+      }
+    }
   }
 
   // Registra listeners nos botões de tooltip de cálculo
@@ -1066,21 +1151,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fecha se clicou fora do popover
-    if (!e.target.closest('#calc-popover')) {
+    if (!calcPopover.classList.contains('hidden') && !e.target.closest('#calc-popover')) {
       fecharPopoverCalculo();
     }
   });
 
   if (popoverCloseBtn) {
-    popoverCloseBtn.addEventListener('click', fecharPopoverCalculo);
+    popoverCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fecharPopoverCalculo();
+    });
   }
+
+  // Fecha no ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !calcPopover.classList.contains('hidden')) {
+      fecharPopoverCalculo();
+    }
+  });
+
+  // Atualiza posição no resize da janela
+  window.addEventListener('resize', () => {
+    if (currentActiveBtn && !calcPopover.classList.contains('hidden')) {
+      posicionarPopover(currentActiveBtn);
+    }
+  });
+
+  // Gerencia o scroll: reposiciona se o botão estiver visível, fecha se o botão sair da tela
+  window.addEventListener('scroll', (e) => {
+    // Não fecha se o scroll for interno do próprio popover
+    if (e.target && e.target.closest && e.target.closest('#calc-popover')) {
+      return;
+    }
+    if (currentActiveBtn && !calcPopover.classList.contains('hidden')) {
+      const rect = currentActiveBtn.getBoundingClientRect();
+      // Se o botão rolou para fora da tela (acima ou abaixo com folga de 30px)
+      if (rect.bottom < 30 || rect.top > window.innerHeight - 30) {
+        fecharPopoverCalculo();
+      } else {
+        posicionarPopover(currentActiveBtn);
+      }
+    }
+  }, { passive: true, capture: true });
 
   /**
    * Renderiza o Caderno Completo de Fórmulas e Memórias no Modal
    */
   function renderizarCadernoFormulas() {
     const listaIds = [
-      { modulo: '📈 Módulo A: Efeito Bola de Neve & Juros Compostos', ids: ['saldo-rotativo', 'mult-rotativo', 'tempo-dobro-rotativo', 'saldo-cheque', 'tempo-dobro-cheque', 'saldo-consignado', 'tempo-dobro-consignado'] },
+      { modulo: '📈 Módulo A: Efeito Bola de Neve & Juros Compostos', ids: ['saldo-rotativo', 'mult-rotativo', 'tempo-dobro-rotativo', 'saldo-cheque', 'mult-cheque', 'tempo-dobro-cheque', 'saldo-consignado', 'mult-consignado', 'tempo-dobro-consignado'] },
       { modulo: '🛍️ Módulo A: Modelo Econométrico de Crowding-out do Consumo', ids: ['dsr', 'dti', 'consumo-perdido', 'elasticidade', 'decomposicao-consumo'] },
       { modulo: '⚖️ Módulo C: Mínimo Existencial & Lei do Superendividamento (Lei 14.181/2021)', ids: ['minimo-existencial', 'margem-livre', 'teto-prudencial', 'parcela-quinquenal'] },
       { modulo: '📊 Módulo D: Dados Macroeconômicos & Programa Desenrola Brasil (2026)', ids: ['proporcao-macro', 'desenrola-desconto', 'desenrola-parcela', 'desenrola-economia'] }
