@@ -1017,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       default:
         return {
-          titulo: 'Memória de Cálculo Didática',
+          titulo: 'Cálculo Didático',
           formula: 'Y = f(X)',
           substituicao: 'Selecione um indicador válido na interface.',
           interpretacao: 'Cálculo formulado de acordo com a literatura econômica do curso de Ciências Econômicas da URCA.'

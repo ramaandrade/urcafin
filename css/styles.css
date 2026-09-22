@@ -77,7 +77,7 @@ input[type=range] {
   animation: softPulse 2.5s infinite ease-in-out;
 }
 
-/* Tooltip Trigger & Badges de Memória de Cálculo */
+/* Tooltip Trigger & Badges de Cálculo */
 .calc-tooltip-btn {
   display: inline-flex;
   align-items: center;
@@ -111,7 +111,7 @@ input[type=range] {
   color: #ffffff !important;
 }
 
-/* Floating Popover de Memória de Cálculo */
+/* Floating Popover de Cálculo Detalhado */
 #calc-popover {
   position: fixed;
   z-index: 9999;

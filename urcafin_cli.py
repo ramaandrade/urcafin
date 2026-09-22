@@ -362,8 +362,8 @@ def executar_comparativo_macro_cli():
     print("e não de desvios comportamentais residuais como as apostas.")
     print("-" * 75)
 
-def executar_caderno_memorias_cli():
-    print("\n📐 CADERNO DE MEMÓRIAS DE CÁLCULO & FÓRMULAS ECONÔMICAS (URCA)")
+def executar_caderno_calculos_cli():
+    print("\n📐 CADERNO DE CÁLCULOS & FÓRMULAS ECONÔMICAS (URCA)")
     print("=" * 75)
     print("1. JUROS COMPOSTOS (Efeito Bola de Neve):")
     print("   Fórmula: M = PV * (1 + i)^n")
@@ -400,7 +400,7 @@ def main():
         print(" [2] Simular Efeito Bola de Neve (Rotativo vs Cheque vs Consignado)")
         print(" [3] Calcular Mínimo Existencial & Repactuação Judicial (Lei 14.181)")
         print(" [4] Visualizar Análise Macro: Juros das Famílias vs Bets")
-        print(" [5] Exibir Caderno de Memórias de Cálculo & Fórmulas (URCA)")
+        print(" [5] Exibir Caderno de Cálculos & Fórmulas (URCA)")
         print(" [6] Sair")
         
         opcao = input("\n👉 Escolha uma opção (1-6): ").strip()
@@ -413,7 +413,7 @@ def main():
         elif opcao == "4":
             executar_comparativo_macro_cli()
         elif opcao == "5":
-            executar_caderno_memorias_cli()
+            executar_caderno_calculos_cli()
         elif opcao == "6":
             print("\nObrigado por utilizar o URCAFin! Bons estudos na URCA.")
             break
